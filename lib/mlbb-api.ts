@@ -62,7 +62,7 @@ export class MLBBAPIClient {
   }
 
   // ==================== HEROES ====================
-  getHeroes() { return this.request<any>("GET", "/heroes"); }
+  getHeroes() { return this.request<any>("GET", "/heroes?size=200&order=asc"); }
   getHeroRank() { return this.request<any>("GET", "/heroes/rank"); }
   getHeroPositions() { return this.request<any>("GET", "/heroes/positions"); }
   getHeroDetail(id: string) { return this.request<any>("GET", `/heroes/${id}`); }

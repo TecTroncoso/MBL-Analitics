@@ -4,10 +4,11 @@ import Image from "next/image";
 export const dynamic = 'force-dynamic';
 
 export default async function HeroesPage() {
-  let heroes = [];
+  let heroes: any[] = [];
   try {
     const response = await mlbbApi.getHeroes();
-    heroes = response.data?.records || [];
+    const data = response.data || response;
+    heroes = data?.records || data?.data?.records || [];
     if (!Array.isArray(heroes)) {
       heroes = [];
     }

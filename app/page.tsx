@@ -7,6 +7,7 @@ import { MatchHistory } from "@/components/MatchHistory";
 import { Login } from "@/components/Login";
 import { mlbbApi } from "@/lib/mlbb-api";
 import { Loader2 } from "lucide-react";
+import { getRankInfo } from "@/lib/rank-utils";
 
 export default function Page() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -41,34 +42,16 @@ export default function Page() {
         setUserData(infoRes.value.data.data || infoRes.value.data);
       }
 
-      let latestSeasonId = 0;
+      let allSeasonIds: number[] = [0];
       if (seasonsRes.status === "fulfilled" && seasonsRes.value.data) {
         const sids = seasonsRes.value.data.sids || (seasonsRes.value.data.data && seasonsRes.value.data.data.sids) || [];
         if (sids.length > 0) {
-          const maxSid = Math.max(...sids.map(Number));
-          if (!isNaN(maxSid)) {
-            latestSeasonId = maxSid;
-          }
+          allSeasonIds = [...sids.map(Number).filter((n: number) => !isNaN(n))];
         }
       }
-
-      // Fetch stats and matches using the latest season ID, and fetch `sid=0` as a fallback
-      const [statsRes, matchesResLatest, matchesResZero] = await Promise.allSettled([
-        mlbbApi.getUserStats(),
-        mlbbApi.getUserMatches(latestSeasonId, 20),
-        mlbbApi.getUserMatches(0, 20)
-      ]);
-
-      console.log("statsRes:", statsRes);
-      console.log("matchesResLatest:", matchesResLatest);
-      console.log("matchesResZero:", matchesResZero);
-
-      if (statsRes.status === "fulfilled" && statsRes.value.data) {
-        setUserStats(statsRes.value.data.data || statsRes.value.data);
-      }
       
-      let finalMatchesRes = matchesResLatest;
-      
+      console.log("All season IDs:", allSeasonIds);
+
       // Define a helper to extract matches
       const extractMatches = (res: any) => {
         if (res.status !== "fulfilled" || !res.value.data) return [];
@@ -84,25 +67,43 @@ export default function Page() {
         return [];
       };
 
-      let matchesList = extractMatches(matchesResLatest);
-      
-      // If latest season has no matches, fallback to sid=0
-      if (matchesList.length === 0) {
-        matchesList = extractMatches(matchesResZero);
-        finalMatchesRes = matchesResZero;
+      // Fetch stats + matches from ALL season IDs in parallel
+      const statsPromise = mlbbApi.getUserStats();
+      const matchPromises = allSeasonIds.map(sid => mlbbApi.getUserMatches(sid, 20));
+
+      const [statsRes, ...matchResults] = await Promise.allSettled([
+        statsPromise,
+        ...matchPromises
+      ]);
+
+      console.log("statsRes:", statsRes);
+      console.log("matchResults:", matchResults);
+
+      if (statsRes.status === "fulfilled" && statsRes.value.data) {
+        setUserStats(statsRes.value.data.data || statsRes.value.data);
       }
+
+      // Merge matches from all seasons, deduplicate by bid_s, sort by timestamp
+      const allMatches: any[] = [];
+      const seenBids = new Set<string>();
       
-      setUserMatches(matchesList);
-      
-      // Temporarily store raw API response in a window variable for debugging via console
-      if (typeof window !== 'undefined') {
-        (window as any).__DEBUG_MATCHES = {
-           latestSeasonId,
-           matchesResLatest: matchesResLatest.status === 'fulfilled' ? matchesResLatest.value : null,
-           matchesResZero: matchesResZero.status === 'fulfilled' ? matchesResZero.value : null,
-           extractedCount: matchesList.length
-        };
+      for (const res of matchResults) {
+        const matches = extractMatches(res);
+        for (const m of matches) {
+          const key = m.bid_s || m.bid?.toString();
+          if (key && !seenBids.has(key)) {
+            seenBids.add(key);
+            allMatches.push(m);
+          }
+        }
       }
+
+      // Sort by timestamp descending (newest first)
+      allMatches.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      
+      setUserMatches(allMatches);
+
+      console.log(`Fetched ${allMatches.length} unique matches from ${allSeasonIds.length} season(s)`);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
     } finally {
@@ -131,15 +132,17 @@ export default function Page() {
   }
 
   // Format data for components if we have real data, otherwise fallback to empty structures
+  const rankInfo = getRankInfo(userData?.rank_level || 0);
   const formattedUser = userData ? {
     name: userData.name || "Player",
     server: userData.zoneId || "",
     avatar: userData.avatar || "",
     level: userData.level || 1,
     rank: {
-      tier: userData.rank_level ? `Rank Level ${userData.rank_level}` : "Unranked",
-      points: 0,
-      icon: ""
+      tier: rankInfo.fullName,
+      points: userData.rank_star || 0,
+      icon: rankInfo.icon,
+      color: rankInfo.color
     }
   } : null;
 
@@ -176,6 +179,8 @@ export default function Page() {
     matches: 0 // Not provided in highlight
   }));
 
+  const LANE_NAMES: Record<number, string> = { 1: "EXP Lane", 2: "Mid Lane", 3: "Roam", 4: "Jungle", 5: "Gold Lane" };
+
   const formattedMatches = userMatches.map((match: any) => {
     // Format timestamp to "time ago"
     const matchDate = new Date(match.ts * 1000);
@@ -196,7 +201,7 @@ export default function Page() {
       sid: match.sid || 0,
       result: match.res === 1 ? "Victory" : "Defeat",
       isWin: match.res === 1,
-      type: match.lid === 5 ? "Ranked" : "Classic",
+      type: LANE_NAMES[match.lid] || "Unknown",
       timeAgo: timeAgo,
       duration: "00:00",
       hero: {

@@ -3,14 +3,16 @@ import Image from "next/image";
 export function ProfileHeader({ user }: { user: any }) {
   if (!user) return null;
   
-  const rankIcon = user.rank?.icon || "https://picsum.photos/seed/rank/100/100";
+  const rankIcon = user.rank?.icon || "";
   const rankTier = user.rank?.tier || "Unranked";
   const rankPoints = user.rank?.points || 0;
+  const rankColor = user.rank?.color || "#888";
+  const isUnranked = rankTier === "Unranked";
 
   return (
     <div className="bg-gaming-card border border-gaming-border rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center gap-6 relative overflow-hidden">
       {/* Background glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gaming-accent/10 blur-[100px] rounded-full pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-64 h-64 blur-[100px] rounded-full pointer-events-none" style={{ backgroundColor: `${rankColor}20` }}></div>
 
       <div className="relative">
         <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-gaming-border">
@@ -42,21 +44,31 @@ export function ProfileHeader({ user }: { user: any }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 bg-gaming-bg p-4 rounded-xl border border-gaming-border">
-        <Image
-          src={rankIcon}
-          alt={rankTier}
-          width={64}
-          height={64}
-          className="object-contain"
-          unoptimized
-        />
+      <div className="flex items-center gap-4 bg-gaming-bg p-4 rounded-xl border border-gaming-border min-w-[200px]">
+        {rankIcon && (
+          <Image
+            src={rankIcon}
+            alt={rankTier}
+            width={64}
+            height={64}
+            className="object-contain"
+            unoptimized
+          />
+        )}
         <div>
           <div className="text-sm text-gray-400 font-medium uppercase tracking-wider">Ranked</div>
-          <div className="text-xl font-bold text-white">{rankTier}</div>
-          <div className="text-sm text-gaming-accent font-medium">{rankPoints} Points</div>
+          <div className="text-xl font-bold" style={{ color: rankColor }}>{rankTier}</div>
+          {!isUnranked && rankPoints > 0 && (
+            <div className="flex items-center gap-1 mt-0.5">
+              {Array.from({ length: Math.min(rankPoints, 5) }).map((_, i) => (
+                <span key={i} className="text-yellow-400 text-xs">★</span>
+              ))}
+              {rankPoints > 5 && <span className="text-xs text-gray-400 ml-1">+{rankPoints - 5}</span>}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
