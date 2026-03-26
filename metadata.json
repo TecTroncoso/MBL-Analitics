@@ -1,0 +1,5 @@
+{
+  "name": "MLBB Analytics",
+  "description": "A Mobalytics-style analytics dashboard for Mobile Legends: Bang Bang.",
+  "requestFramePermissions": []
+}

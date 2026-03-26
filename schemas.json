@@ -1,0 +1,270 @@
+{
+  "Body_login_api_user_auth_login_post": {
+    "properties": {
+      "role_id": {
+        "type": "integer",
+        "title": "Role ID",
+        "description": "The unique role ID of the player's account."
+      },
+      "zone_id": {
+        "type": "integer",
+        "title": "Zone ID",
+        "description": "The zone ID associated with the player's server region."
+      },
+      "vc": {
+        "type": "integer",
+        "title": "Verification Code",
+        "description": "The 4-digit verification code, obtained through in-game mail via the send-vc endpoint, remains valid for 5 minutes."
+      }
+    },
+    "type": "object",
+    "required": [
+      "role_id",
+      "zone_id",
+      "vc"
+    ],
+    "title": "Body_login_api_user_auth_login_post"
+  },
+  "Body_logout_api_user_auth_logout_post": {
+    "properties": {
+      "jwt": {
+        "type": "string",
+        "title": "JWT",
+        "description": "The JWT obtained from the /login endpoint."
+      }
+    },
+    "type": "object",
+    "required": [
+      "jwt"
+    ],
+    "title": "Body_logout_api_user_auth_logout_post"
+  },
+  "Body_send_vc_api_user_auth_send_vc_post": {
+    "properties": {
+      "role_id": {
+        "type": "integer",
+        "title": "Role ID",
+        "description": "The unique role ID of the player's account. (Game ID)"
+      },
+      "zone_id": {
+        "type": "integer",
+        "title": "Zone ID",
+        "description": "The zone ID associated with the player's server region. (Server ID)"
+      }
+    },
+    "type": "object",
+    "required": [
+      "role_id",
+      "zone_id"
+    ],
+    "title": "Body_send_vc_api_user_auth_send_vc_post"
+  },
+  "Body_user_frequent_heroes_api_user_heroes_frequent_post": {
+    "properties": {
+      "jwt": {
+        "type": "string",
+        "title": "JWT",
+        "description": "The JWT obtained from the /login endpoint."
+      }
+    },
+    "type": "object",
+    "required": [
+      "jwt"
+    ],
+    "title": "Body_user_frequent_heroes_api_user_heroes_frequent_post"
+  },
+  "Body_user_friends_api_user_friends_post": {
+    "properties": {
+      "jwt": {
+        "type": "string",
+        "title": "JWT",
+        "description": "The JWT obtained from the /login endpoint."
+      }
+    },
+    "type": "object",
+    "required": [
+      "jwt"
+    ],
+    "title": "Body_user_friends_api_user_friends_post"
+  },
+  "Body_user_info_api_user_info_post": {
+    "properties": {
+      "jwt": {
+        "type": "string",
+        "title": "JWT",
+        "description": "The JWT obtained from the /login endpoint."
+      }
+    },
+    "type": "object",
+    "required": [
+      "jwt"
+    ],
+    "title": "Body_user_info_api_user_info_post"
+  },
+  "Body_user_matches_api_user_matches_post": {
+    "properties": {
+      "jwt": {
+        "type": "string",
+        "title": "JWT",
+        "description": "The JWT obtained from the /login endpoint."
+      }
+    },
+    "type": "object",
+    "required": [
+      "jwt"
+    ],
+    "title": "Body_user_matches_api_user_matches_post"
+  },
+  "Body_user_matches_details_api_user_matches__match_id__post": {
+    "properties": {
+      "jwt": {
+        "type": "string",
+        "title": "JWT",
+        "description": "The JWT obtained from the /login endpoint."
+      }
+    },
+    "type": "object",
+    "required": [
+      "jwt"
+    ],
+    "title": "Body_user_matches_details_api_user_matches__match_id__post"
+  },
+  "Body_user_season_api_user_season_post": {
+    "properties": {
+      "jwt": {
+        "type": "string",
+        "title": "JWT",
+        "description": "The JWT obtained from the /login endpoint."
+      }
+    },
+    "type": "object",
+    "required": [
+      "jwt"
+    ],
+    "title": "Body_user_season_api_user_season_post"
+  },
+  "Body_user_stats_api_user_stats_post": {
+    "properties": {
+      "jwt": {
+        "type": "string",
+        "title": "JWT",
+        "description": "The JWT obtained from the /login endpoint."
+      }
+    },
+    "type": "object",
+    "required": [
+      "jwt"
+    ],
+    "title": "Body_user_stats_api_user_stats_post"
+  },
+  "HTTPValidationError": {
+    "properties": {
+      "detail": {
+        "items": {
+          "$ref": "#/components/schemas/ValidationError"
+        },
+        "type": "array",
+        "title": "Detail"
+      }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+  },
+  "HeroLaneEnum": {
+    "type": "string",
+    "enum": [
+      "exp",
+      "mid",
+      "roam",
+      "jungle",
+      "gold"
+    ],
+    "title": "HeroLaneEnum",
+    "description": "Enum for hero lanes."
+  },
+  "LanguageEnum": {
+    "type": "string",
+    "enum": [
+      "en",
+      "id",
+      "ru",
+      "es",
+      "pt",
+      "tr",
+      "ar",
+      "de",
+      "fr",
+      "it",
+      "ja",
+      "ko",
+      "th",
+      "vi",
+      "zh-CN",
+      "zh-TW"
+    ],
+    "title": "LanguageEnum",
+    "description": "Language codes for localized content."
+  },
+  "RankEnum": {
+    "type": "string",
+    "enum": [
+      "all",
+      "epic",
+      "legend",
+      "mythic",
+      "honor",
+      "glory"
+    ],
+    "title": "RankEnum",
+    "description": "Rank filter for hero statistics."
+  },
+  "SortOrderEnum": {
+    "type": "string",
+    "enum": [
+      "asc",
+      "desc"
+    ],
+    "title": "SortOrderEnum",
+    "description": "Sort order for query results."
+  },
+  "ValidationError": {
+    "properties": {
+      "loc": {
+        "items": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "type": "array",
+        "title": "Location"
+      },
+      "msg": {
+        "type": "string",
+        "title": "Message"
+      },
+      "type": {
+        "type": "string",
+        "title": "Error Type"
+      },
+      "input": {
+        "title": "Input"
+      },
+      "ctx": {
+        "type": "object",
+        "title": "Context"
+      }
+    },
+    "type": "object",
+    "required": [
+      "loc",
+      "msg",
+      "type"
+    ],
+    "title": "ValidationError"
+  }
+}
