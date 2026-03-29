@@ -1,5 +1,6 @@
 import { mlbbApi } from "@/lib/mlbb-api";
 import Image from "next/image";
+import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,21 +32,23 @@ export default async function HeroesPage() {
             const imageUrl = heroData.head || `https://picsum.photos/seed/${heroData.name || 'hero'}/100/100`;
             
             return (
-              <div key={heroId} className="bg-gaming-card border border-gaming-border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-gaming-accent transition-colors cursor-pointer group">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-gaming-bg border-2 border-transparent group-hover:border-gaming-accent transition-colors">
-                  <Image 
-                    src={imageUrl} 
-                    alt={heroData.name || 'Hero'} 
-                    width={80} 
-                    height={80} 
-                    className="object-cover w-full h-full" 
-                    unoptimized // Using unoptimized just in case the API returns external URLs that Next.js struggles to optimize
-                  />
+              <Link key={heroId} href={`/heroes/${heroId}`} className="block">
+                <div className="bg-gaming-card border border-gaming-border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-gaming-accent transition-colors cursor-pointer group h-full">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gaming-bg border-2 border-transparent group-hover:border-gaming-accent transition-colors">
+                    <Image 
+                      src={imageUrl} 
+                      alt={heroData.name || 'Hero'} 
+                      width={80} 
+                      height={80} 
+                      className="object-cover w-full h-full" 
+                      unoptimized // Using unoptimized just in case the API returns external URLs that Next.js struggles to optimize
+                    />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-white font-bold text-sm">{heroData.name || 'Unknown'}</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-white font-bold text-sm">{heroData.name || 'Unknown'}</div>
-                </div>
-              </div>
+              </Link>
             );
           })}
         </div>

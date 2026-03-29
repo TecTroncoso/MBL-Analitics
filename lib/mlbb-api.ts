@@ -77,9 +77,9 @@ export class MLBBAPIClient {
   getGameVersion() { return this.request<any>("GET", "/academy/meta/version"); }
   getHeroCatalog() { return this.request<any>("GET", "/academy/heroes/catalog"); }
   getRoles() { return this.request<any>("GET", "/academy/roles"); }
-  getEquipment(expanded = false) { return this.request<any>("GET", expanded ? "/academy/equipment/expanded" : "/academy/equipment"); }
-  getSpells() { return this.request<any>("GET", "/academy/spells"); }
-  getEmblems() { return this.request<any>("GET", "/academy/emblems"); }
+  getEquipment(expanded = false) { return this.request<any>("GET", expanded ? "/academy/equipment/expanded?size=200" : "/academy/equipment?size=200"); }
+  getSpells() { return this.request<any>("GET", "/academy/spells?size=100"); }
+  getEmblems() { return this.request<any>("GET", "/academy/emblems?size=100"); }
   getRanks(rankId?: string) { return this.request<any>("GET", rankId ? `/academy/ranks/${rankId}` : "/academy/ranks"); }
   getHeroBuilds(id: string) { return this.request<any>("GET", `/academy/heroes/${id}/builds`); }
   getHeroLane(id: string) { return this.request<any>("GET", `/academy/heroes/${id}/lane`); }
