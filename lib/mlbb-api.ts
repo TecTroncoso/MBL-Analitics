@@ -81,7 +81,7 @@ export class MLBBAPIClient {
   getSpells() { return this.request<any>("GET", "/academy/spells?size=100"); }
   getEmblems() { return this.request<any>("GET", "/academy/emblems?size=100"); }
   getRanks(rankId?: string) { return this.request<any>("GET", rankId ? `/academy/ranks/${rankId}` : "/academy/ranks"); }
-  getHeroBuilds(id: string) { return this.request<any>("GET", `/academy/heroes/${id}/builds`); }
+  getHeroBuilds(id: string, lane?: string) { return this.request<any>("GET", `/academy/heroes/${id}/builds${lane ? `?lane=${lane}` : ''}`); }
   getHeroLane(id: string) { return this.request<any>("GET", `/academy/heroes/${id}/lane`); }
   getHeroWinrateTimeline(id: string) { return this.request<any>("GET", `/academy/heroes/${id}/win-rate/timeline`); }
   getHeroTeammates(id: string) { return this.request<any>("GET", `/academy/heroes/${id}/teammates`); }

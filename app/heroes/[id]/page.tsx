@@ -21,11 +21,9 @@ export default async function HeroDetailPage({ params }: { params: Promise<{ id:
   let emblemsList: any[] = [];
   
   try {
-    // Parallel fetching to drastically reduce latency
-    const [detailRes, combosRes, buildsRes, equipRes, spellsRes, emblemsRes] = await Promise.allSettled([
+    // Fetch details first to get the Lane, while also fetching static catalogs concurrently
+    const [detailRes, equipRes, spellsRes, emblemsRes] = await Promise.allSettled([
       mlbbApi.getHeroDetail(id),
-      mlbbApi.getHeroSkillCombos(id),
-      mlbbApi.getAcademyHeroRecommended(id),
       mlbbApi.getEquipment(false),
       mlbbApi.getSpells(),
       mlbbApi.getEmblems()
@@ -34,18 +32,64 @@ export default async function HeroDetailPage({ params }: { params: Promise<{ id:
     if (detailRes.status === "fulfilled") {
       heroDetail = detailRes.value.data?.records?.[0]?.data || detailRes.value.data || detailRes.value;
     }
+
+    const heroData = heroDetail?.hero?.data || heroDetail;
+
+    // Extract lane
+    let laneStr = "gold";
+    const laneName = heroData?.roadsortlabel?.[0]?.toLowerCase() || "";
+    if (laneName.includes("exp")) laneStr = "exp";
+    else if (laneName.includes("mid")) laneStr = "mid";
+    else if (laneName.includes("roam")) laneStr = "roam";
+    else if (laneName.includes("jungle")) laneStr = "jungle";
+    else if (laneName.includes("gold")) laneStr = "gold";
+
+    // Now fetch combos, official builds, and UGC builds concurrently
+    const [combosRes, officialRes, ugcRes] = await Promise.allSettled([
+      mlbbApi.getHeroSkillCombos(id),
+      mlbbApi.getHeroBuilds(id, laneStr),
+      mlbbApi.getAcademyHeroRecommended(id)
+    ]);
     
     if (combosRes.status === "fulfilled") {
       skillCombos = combosRes.value.data?.records || combosRes.value.data || [];
     }
 
-    if (buildsRes.status === "fulfilled") {
-      heroBuilds = buildsRes.value.data?.records?.map((r: any) => ({
+    heroBuilds = [];
+
+    // 1. Process Official Core Builds (only have 3 items, highly accurate telemetry)
+    if (officialRes.status === "fulfilled") {
+      const records = officialRes.value.data?.records || [];
+      if (records[0]?.data?.build) {
+        const offBuilds = records[0].data.build.slice(0, 2).map((b: any) => ({
+          isOfficial: true,
+          author: { name: "Official Global Data", avatar: null },
+          stats: { votes: Math.round((b.build_pick_rate || 0) * 10000) }, // fake votes for sorting equivalent
+          title: `Core Build - ${((b.build_win_rate || 0) * 100).toFixed(1)}% WR`,
+          recommend: "Strictly the 3 core items with highest win-rate from global top players.",
+          equips: [{ equip_title: "Core Items", equip_ids: b.equipid }],
+          spell: { spell_id: b.battleskill?.battleskillid || b.battleskill?.data?.__data?.skillid || b.skillid },
+          emblems: [{ emblem_title: b.emblem?.emblemname || "Emblem", emblem_gifts: b.new_rune_skill }]
+        }));
+        heroBuilds = [...heroBuilds, ...offBuilds];
+      }
+    }
+
+    // 2. Process UGC Community Builds (have full 6 items, sorted by community votes)
+    if (ugcRes.status === "fulfilled") {
+      const records = ugcRes.value.data?.records || [];
+      const ugcBuilds = records.map((r: any) => ({
         ...r.data?.data,
         author: r.user,
         stats: r.dynamic,
         title: r.data?.title || r.title || r.data?.data?.title
-      })) || [];
+      }));
+      
+      // Sort UGC by votes descending
+      ugcBuilds.sort((a: any, b: any) => (b.stats?.votes || 0) - (a.stats?.votes || 0));
+      
+      // Add top 3 UGC builds
+      heroBuilds = [...heroBuilds, ...ugcBuilds.slice(0, 3)];
     }
 
     if (equipRes.status === "fulfilled") {
@@ -83,13 +127,23 @@ export default async function HeroDetailPage({ params }: { params: Promise<{ id:
   const spellMap = Object.fromEntries(spellsList.map(r => [r.data?.__data?.skillid || r.skillid, r.data?.__data || r]));
   const emblemTalentMap = Object.fromEntries(emblemsList.map(r => [r.data?.giftid || r.giftid, r.data?.emblemskill || r.emblemskill || r]));
 
-  // Pick up to 5 recommended builds
-  const recommendedBuilds = heroBuilds?.slice(0, 5) || [];
+  // Sort builds by votes (descending) to filter out new troll/irrelevant builds
+  const sortedBuilds = [...(heroBuilds || [])].sort((a: any, b: any) => {
+    const votesA = a.stats?.votes || 0;
+    const votesB = b.stats?.votes || 0;
+    return votesB - votesA;
+  });
+
+  // Pick up to 5 top recommended builds
+  const recommendedBuilds = sortedBuilds.slice(0, 5);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
-      <Link href="/heroes" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4">
-        <ArrowLeft className="w-4 h-4" /> Back to Catalog
+      <Link href="/heroes" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4" prefetch={false}>
+        <span className="flex items-center gap-2">
+          <svg suppressHydrationWarning xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          Back to Catalog
+        </span>
       </Link>
 
       {/* Hero Header Banner */}
